@@ -7,11 +7,21 @@ const getAllMovies = async (req, res) => {
 
 const addMovie = async (req, res) => {
   try {
-    const { title, category, img } = req.body;
-    const newMovie = new Movie({ title, category, img });
-    await newMovie.save();
+    const data = req.body;
 
-    res.status(201).json(newMovie);
+    // Check if multiple movies are being added
+    if (Array.isArray(data)) {
+      const movies = await Movie.insertMany(data); // bulk insert
+      res.status(201).json({ message: 'Movies added successfully', movies });
+    } else {
+      // Single movie
+      const { title, category, img } = data;
+      const newMovie = new Movie({ title, category, img });
+      await newMovie.save();
+      res
+        .status(201)
+        .json({ message: 'Movie added successfully', movie: newMovie });
+    }
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
@@ -34,8 +44,23 @@ const updateMovie = async (req, res) => {
   }
 };
 
+const getMoviesByCategory = async (req, res) => {
+  try {
+    const { category } = req.params;
+
+    const movies = await Movie.find({
+      category: new RegExp(`^${category}$`, 'i'), // case-insensitive match
+    });
+
+    res.json(movies);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   getAllMovies,
   addMovie,
   updateMovie,
+  getMoviesByCategory,
 };
