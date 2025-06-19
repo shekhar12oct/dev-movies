@@ -58,9 +58,29 @@ const getMoviesByCategory = async (req, res) => {
   }
 };
 
+const searchmovies = async (req, res) => {
+  try {
+    const {input} = req.body;
+
+    // Case-insensitive partial match on title
+    const movies = await Movie.find({
+      title:{$regex:'^' + input, $options:'i'}
+    })
+
+    if(movies.length===0){
+      return res.status(200).json({ message: 'No matching movies found.' });
+    }
+
+    res.status(200).json(movies);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
 module.exports = {
   getAllMovies,
   addMovie,
   updateMovie,
   getMoviesByCategory,
+  searchmovies,
 };
